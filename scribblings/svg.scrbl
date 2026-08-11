@@ -11,7 +11,14 @@
 @(define ev (make-base-eval #:lang 'racket/base))
 @(ev '(require svg racket/draw racket/class racket/math))
 
+
 @title{svg: SVG Rendering for Racket}
+@author+email["Jens Axel Søgaard" "jensaxel@soegaard.net"]
+
+@italic{Note:}
+The @tt{parsers} library and documentation were written with the help of Codex.
+
+@defmodule[svg]
 
 @racketmodname[svg] turns SVG files or strings into Racket @racket[bitmap%] images
 or @hyperlink["https://docs.racket-lang.org/pict/index.html"]{@racket[pict]}s.
@@ -37,7 +44,6 @@ at the end of this document.
 
 @table-of-contents[]
 
-@defmodule[svg]
 
 @section{Installation}
 
