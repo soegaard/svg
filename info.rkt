@@ -4,7 +4,7 @@
 (define version "0.1")
 (define pkg-authors '(soegaard))
 (define license 'MIT)
-(define pkg-desc "An SVG parser and static renderer for Racket")
+(define pkg-desc "Render SVG files and strings as Racket bitmaps or picts")
 
 (define deps
   '("base"

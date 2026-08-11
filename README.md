@@ -11,13 +11,13 @@ scope.
 
 ## Installation
 
-Once published to the Racket package catalog:
+Install from the Racket package catalog:
 
 ```sh
 raco pkg install svg
 ```
 
-For local development from this checkout:
+For local development from a checkout:
 
 ```sh
 raco pkg install --link --auto --name svg .

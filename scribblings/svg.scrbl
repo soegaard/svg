@@ -11,9 +11,9 @@
 @(define ev (make-base-eval #:lang 'racket/base))
 @(ev '(require svg racket/draw racket/class racket/math))
 
-@title{svg - An SVG Parser and Renderer}
+@title{svg: SVG Rendering for Racket}
 
-@racketmodname[svg] turns svg files or strings into Racket @racket[bitmap%] images
+@racketmodname[svg] turns SVG files or strings into Racket @racket[bitmap%] images
 or @hyperlink["https://docs.racket-lang.org/pict/index.html"]{@racket[pict]}s.
 
 The @racketmodname[svg] Racket library allows you to read SVG documents and
@@ -23,14 +23,14 @@ colors, gradients, patterns, clipping, masks, text, images, CSS styles, and seve
 It does not try to run animations or scripts;
 it renders one still image.
 
-The svg version covered is most of static SVG 1.1/2 --- shapes, paths, gradients and patterns,
+The renderer covers most of static SVG 1.1 and SVG 2 --- shapes, paths, gradients and patterns,
 clipping and masking, markers, text, images, CSS stylesheets
 (including SVG2's CSS geometry properties), and a substantial subset of filter effects.
 
-The render is built directly on @racket[racket/draw]'s @racket[dc<%>] rather than
+Rendering is built directly on @racketmodname[racket/draw]'s @racket[dc<%>] rather than
 through an intermediate representation.
 
-The main omission of the rendered are animations;
+The main omissions are animations, scripting, and interactivity;
 this is a static, single-frame renderer.
 Other gaps are listed in @secref{scope-and-known-limitations}
 at the end of this document.

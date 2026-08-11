@@ -110,9 +110,8 @@
 ;;;         arguably the single most common non-trivial filter in real-
 ;;;         world SVGs, right after blur itself;
 ;;;       - `<style>` CSS is parsed via `parsers/css` (Jens Axel Søgaard's
-;;;         parsers-lib package -- requires `raco pkg install parsers-lib
-;;;         lexers-lib`, this file's only dependency beyond a standard
-;;;         Racket install) rather than a hand-rolled parser: a real CSS
+;;;         parsers-lib package, declared as a dependency in this package's
+;;;         info.rkt) rather than a hand-rolled parser: a real CSS
 ;;;         Syntax Level 3 parser handles quoting/escaping/comments and
 ;;;         !important correctly, which a from-scratch parser would have
 ;;;         had to reinvent. Selector MATCHING against an actual element
@@ -1244,15 +1243,9 @@
 ;;;
 ;;; ---------------------------------------------------------------------
 
-;; `parsers/css` (used for Tier 9's <style> stylesheets) is the only
-;; dependency here beyond a standard Racket install -- everything else is
-;; racket/base plus collections that ship with Racket, INCLUDING `pict`
-;; (used below for pict output): it's part of the same "Batteries
-;; Included" distribution as Slideshow/Scribble, so it needs no separate
-;; `raco pkg install`, unlike parsers/css. Install parsers/css with:
-;;   raco pkg install parsers-lib lexers-lib
-;; (parsers-lib depends on lexers-lib; both from Jens Axel Søgaard's
-;; https://github.com/soegaard/parsers and https://github.com/soegaard/lexers)
+;; Package dependencies are declared in info.rkt. If you use this file
+;; directly outside the package, install parsers-lib for `parsers/css`;
+;; parsers-lib pulls in lexers-lib as its own dependency.
 (require racket/match
          racket/list
          racket/string
