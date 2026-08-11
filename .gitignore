@@ -1,6 +1,8 @@
 .DS_Store
 compiled/
 /doc/
+/docs/
+/scribblings/doc-examples/
 *~
 *.bak
 \#*
