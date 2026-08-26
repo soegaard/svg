@@ -22,7 +22,7 @@
     "scribble-lib"))
 
 (define scribblings
-  '(("scribblings/svg.scrbl" (multi-page))))
+  '(("scribblings/svg-manual.scrbl" (multi-page))))
 
 (define compile-omit-paths '("docs"))
 (define test-omit-paths '("docs"))

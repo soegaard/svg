@@ -51,7 +51,7 @@ Use `svg-string->pict` or `svg-file->pict` when you want a composable
 After installation, run:
 
 ```sh
-raco docs svg
+raco docs svg-manual
 ```
 
 The package manual documents the public API and the renderer's known
