@@ -28,7 +28,7 @@ raco pkg install --link --auto --name svg .
 ```racket
 #lang racket
 
-(require svg racket/class)
+(require svg/svg racket/class)
 
 (define bm
   (svg-string->bitmap

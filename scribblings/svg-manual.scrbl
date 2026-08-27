@@ -4,12 +4,12 @@
                       racket/class
                       racket/contract
                       pict
-                      svg)
+                      svg/svg)
           scribble/example
           racket/sandbox)
 
 @(define ev (make-base-eval #:lang 'racket/base))
-@(ev '(require svg racket/draw racket/class racket/math))
+@(ev '(require svg/svg racket/draw racket/class racket/math))
 
 
 @title{svg: SVG Rendering for Racket}
@@ -18,12 +18,12 @@
 @italic{Note:}
 The @tt{parsers} library and documentation were written with the help of Codex.
 
-@defmodule[svg]
+@defmodule[svg/svg]
 
-@racketmodname[svg] turns SVG files or strings into Racket @racket[bitmap%] images
+@racketmodname[svg/svg] turns SVG files or strings into Racket @racket[bitmap%] images
 or @hyperlink["https://docs.racket-lang.org/pict/index.html"]{@racket[pict]}s.
 
-The @racketmodname[svg] Racket library allows you to read SVG documents and
+The @racketmodname[svg/svg] Racket library allows you to read SVG documents and
 then draw them with @racketmodname[racket/draw].
 The library supports many common static SVG features, including shapes, paths,
 colors, gradients, patterns, clipping, masks, text, images, CSS styles, and several filters.
@@ -56,7 +56,7 @@ declared dependencies automatically.
 
 Then:
 
-@racketblock[(require svg)]
+@racketblock[(require svg/svg)]
 
 @section{Quick Start}
 
@@ -66,7 +66,7 @@ The four functions you'll likely reach for first are @racket[svg-string->bitmap]
 @racket[bitmap%] or a @racket[pict].
 
 @codeblock{
-(require svg racket/class)
+(require svg/svg racket/class)
 
 (define bm
   (svg-string->bitmap
@@ -98,7 +98,7 @@ ordinary picts like @racket[disk], @racket[text], @racket[frame], and
 @racket[dc] constructor:
 
 @racketblock[
-(require svg pict)
+(require svg/svg pict)
 
 (define badge (svg-string->pict "...")) (code:comment "same SVG string as above")
 
@@ -124,7 +124,7 @@ approximation:
 If all you need is one of those four top-level functions, you can stop
 reading here. The rest of this document covers the lower-level pieces
 (path-data parsing, paint resolution, transform matrices, and so on) that
-@racketmodname[svg] also exports, in case you want to reuse a piece of the
+@racketmodname[svg/svg] also exports, in case you want to reuse a piece of the
 pipeline directly --- say, to parse path data for your own purposes, or to
 resolve an SVG color string without rendering anything.
 
@@ -220,7 +220,7 @@ Constructing the pict costs a second, throwaway render as part of
 @racket[pict]'s own contract checking (@racket[dc]'s precondition renders once
 with a scratch @racket[dc<%>] to confirm the draw procedure restores its
 state correctly) --- this is @racket[pict]'s behavior, not something
-@racketmodname[svg] adds on top, and it's a one-time cost per pict, not per
+@racketmodname[svg/svg] adds on top, and it's a one-time cost per pict, not per
 subsequent draw.
 }
 
@@ -474,7 +474,7 @@ concepts --- length units, the @tt{transform} attribute, @tt{viewBox}, and
 @tt{preserveAspectRatio} --- into plain numbers and the @racket[#(a b c d e f)]
 matrix format @racket[dc<%>]'s own @racket[transform] method accepts.
 
-Every matrix in this document and in @racketmodname[svg] uses that same
+Every matrix in this document and in @racketmodname[svg/svg] uses that same
 six-element vector format throughout, matching @racket[dc<%>]'s convention
 exactly:
 
@@ -521,7 +521,7 @@ Parses an SVG @tt{transform} attribute value --- a space-separated list of
 @tt{skewX}, @tt{skewY}, @tt{matrix}) --- into a list of @racket[(name . args)]
 pairs, in source order. Doesn't build a matrix itself; combine with the
 transform semantics your own code needs, or see the file's internal
-@tt{apply-transform-attr!} for how @racketmodname[svg] applies these to a
+@tt{apply-transform-attr!} for how @racketmodname[svg/svg] applies these to a
 @racket[dc<%>] (not exported, since it mutates a @racket[dc<%>] directly
 rather than returning a value).
 
@@ -538,7 +538,7 @@ spin the @italic{opposite} direction for a positive angle (confirmed
 empirically) --- code building a matrix from this list's @tt{rotate} entries
 directly, rather than using @racket[dc<%>]'s @racket[rotate] method, needs to
 account for that sign difference to match SVG's convention.
-(@racketmodname[svg]'s own internal transform-application code does this
+(@racketmodname[svg/svg]'s own internal transform-application code does this
 already; it's only a concern if you're building your own matrix from this
 parsed list.)
 }
@@ -906,7 +906,7 @@ the two are almost always used together.
 
 @section{CSS Styling}
 
-@racketmodname[svg] resolves a full CSS cascade for both paint properties
+@racketmodname[svg/svg] resolves a full CSS cascade for both paint properties
 (@tt{fill}, @tt{stroke}, @tt{opacity}, ...) and SVG2's "geometry properties"
 (@tt{cx}, @tt{r}, @tt{x}, @tt{width}, @tt{d}, ...) --- inline @tt{style=""},
 @tt{<style>} stylesheet rules (matched by type/class/id/universal/attribute
@@ -939,7 +939,7 @@ raising.
 
 @section[#:tag "text"]{Text}
 
-@racketmodname[svg] renders @tt{<text>}/@tt{<tspan>} by converting text to path
+@racketmodname[svg/svg] renders @tt{<text>}/@tt{<tspan>} by converting text to path
 geometry via @racket[dc-path%]'s own @racket[text-outline] (not
 @racket[dc<%>]'s @racket[draw-text]), so text gets the same
 gradient/pattern/dasharray/opacity support as any other shape, for free.
@@ -1089,7 +1089,7 @@ A zigzag path with each of its vertices marked:
 @defproc[(dc-path->vertices [p (is-a?/c dc-path%)]) (listof vertex?)]{
 
 Extracts every vertex of @racket[p] (across all of its subpaths), in order,
-as described above. This is what @racketmodname[svg] calls internally to decide
+as described above. This is what @racketmodname[svg/svg] calls internally to decide
 where to place @tt{marker-start}/@tt{marker-mid}/@tt{marker-end} instances
 along a @tt{<path>}, @tt{<line>}, @tt{<polyline>}, or @tt{<polygon>}.
 
@@ -1337,7 +1337,7 @@ The classic demonstration of why this matters: averaging black (0) and white
 
 @section[#:tag "scope-and-known-limitations"]{Scope and Known Limitations}
 
-@racketmodname[svg] covers most of static SVG 1.1/2 rendering to a genuinely
+@racketmodname[svg/svg] covers most of static SVG 1.1/2 rendering to a genuinely
 deep level --- full path-data and transform grammars, a real paint model
 (gradients, patterns, @tt{objectBoundingBox}, and both able to paint strokes
 as well as fills), clipping and masking, markers (including @tt{paint-order}

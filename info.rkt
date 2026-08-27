@@ -1,7 +1,7 @@
 #lang info
 
 (define collection "svg")
-(define version "0.1")
+(define version "0.2")
 (define pkg-authors '(soegaard))
 (define license 'MIT)
 (define pkg-desc "Render SVG files and strings as Racket bitmaps or picts")
