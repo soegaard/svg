@@ -1589,8 +1589,10 @@
 ;;
 ;; A dc-path% holds zero-or-more closed subpaths plus at most one open
 ;; subpath; `move-to` starts a new open subpath. Since an SVG path can
-;; contain several disconnected subpaths, we accumulate a *list* of
-;; dc-path% objects, starting a fresh one on each moveto.
+;; contain several disconnected subpaths, retain its closed contours in
+;; one dc-path% so a single SVG fill rule applies to all of them. We only
+;; start a fresh dc-path% when a new moveto would otherwise leave an older
+;; subpath open.
 
 (define (svg-path->dc-paths commands)
   (define finished '())
@@ -1598,6 +1600,10 @@
   ;; Whether `cur` currently has an open subpath (i.e. move-to has been
   ;; called on it since it was created / since the last close).
   (define subpath-open? #f)
+  ;; Whether `cur` contains any subpath, including a closed one. This is
+  ;; distinct from `subpath-open?`, since a path made entirely of closed
+  ;; contours still needs to be returned for filling.
+  (define cur-has-content? #f)
 
   ;; current point
   (define X 0.) (define Y 0.)
@@ -1616,14 +1622,22 @@
   (define (ensure-open!)
     (unless subpath-open?
       (send cur move-to X Y)
-      (set! subpath-open? #t)))
+      (set! subpath-open? #t)
+      (set! cur-has-content? #t)))
 
   (define (do-M x y)
     (clear-controls!)
-    (when subpath-open? (set! finished (cons cur finished)) (set! cur (new dc-path%)))
+    ;; A dc-path% can retain any number of CLOSED contours, but only one
+    ;; open contour. Preserve those closed contours together so nonzero and
+    ;; evenodd filling can see their relationship.
+    (when subpath-open?
+      (set! finished (cons cur finished))
+      (set! cur (new dc-path%))
+      (set! cur-has-content? #f))
     (set! X x) (set! Y y) (set! SX x) (set! SY y)
     (send cur move-to X Y)
-    (set! subpath-open? #t))
+    (set! subpath-open? #t)
+    (set! cur-has-content? #t))
   (define (do-m dx dy) (do-M (+ X dx) (+ Y dy)))
 
   (define (do-L x y) (clear-controls!) (ensure-open!) (set! X x) (set! Y y) (send cur line-to X Y))
@@ -1638,8 +1652,6 @@
     (clear-controls!)
     (when subpath-open?
       (send cur close)
-      (set! finished (cons cur finished))
-      (set! cur (new dc-path%))
       (set! subpath-open? #f))
     (set! X SX) (set! Y SY))
 
@@ -1737,7 +1749,7 @@
          (do-a rx ry rot laf sf dx dy))]
       [(list 'Z) (do-Z)]
       [(list 'z) (do-Z)]))
-  (reverse (if subpath-open? (cons cur finished) finished)))
+  (reverse (if cur-has-content? (cons cur finished) finished)))
 
 (define (path-data->dc-paths d) (svg-path->dc-paths (parse-svg-path d)))
 
@@ -6009,12 +6021,30 @@
   (test-case "closepath returns current point to subpath start"
     (define paths (path-data->dc-paths "M5,5 L10,10 Z l1,1"))
     ;; Z closes the first subpath; the following relative lineto implicitly
-    ;; starts a *new* subpath at (5,5), landing at (6,6).
-    (check-equal? (length paths) 2)
-    (define-values (closed open) (send (last paths) get-datum))
+    ;; starts a new open subpath at (5,5), landing at (6,6). Both remain in
+    ;; one dc-path% so its fill rule also sees the preceding closed contour.
+    (check-equal? (length paths) 1)
+    (define-values (closed open) (send (first paths) get-datum))
     (define last-point (last open))
     (check-= (vector-ref last-point 0) 6. 1e-9)
     (check-= (vector-ref last-point 1) 6. 1e-9))
+
+  (test-case "one SVG path applies its fill rule across closed contours"
+    ;; The two contours are part of one SVG <path>. Keeping them in one
+    ;; dc-path% is essential: drawing each contour separately fills the
+    ;; centre instead of making the evenodd hole. Font glyph counters use
+    ;; exactly this multi-contour representation.
+    (define bm (svg-string->bitmap
+                "<svg width=\"20\" height=\"20\">
+                   <path d=\"M0 0H20V20H0Z M5 5H15V15H5Z\"
+                         fill=\"black\" fill-rule=\"evenodd\"/>
+                 </svg>"))
+    (define dc (new bitmap-dc% [bitmap bm]))
+    (define px (make-object color%))
+    (send dc get-pixel 2 2 px)
+    (check-equal? (send px red) 0)
+    (send dc get-pixel 10 10 px)
+    (check-equal? (send px red) 255))
 
   ;; ---- Length units ---------------------------------------------------
 
