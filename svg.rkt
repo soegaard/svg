@@ -3319,11 +3319,27 @@
     (parameterize ([current-context-fill (render-ctx-fill ctx)] [current-context-stroke (render-ctx-stroke ctx)])
       (values (and (render-ctx-fill ctx) (resolve-fill-brush (render-ctx-fill ctx) bbox fill-alpha))
               (and (render-ctx-stroke ctx) (resolve-fill-brush (render-ctx-stroke ctx) bbox stroke-alpha)))))
+  ;; SVG fills implicitly close every subpath, even when its `d` data has no
+  ;; explicit Z command.  `svg-path->dc-paths` keeps those open subpaths
+  ;; separate so strokes retain their correct endpoints, but filling them
+  ;; separately loses the winding relationship between contours.  In
+  ;; particular, dvisvgm font glyphs commonly encode an outline and its
+  ;; counters as several unclosed contours in one path.  Make a closed,
+  ;; combined copy for filling only; strokes keep using the original paths.
+  (define fill-paths
+    (cond
+      [(null? paths) '()]
+      [else
+       (define combined (new dc-path%))
+       (for ([path (in-list paths)])
+         (send combined append path)
+         (send combined close))
+       (list combined)]))
   (define (do-fill!)
     (when fill-brush
       (send dc set-brush fill-brush)
       (send dc set-pen (new pen% [style 'transparent]))
-      (for ([p (in-list paths)]) (send dc draw-path p 0 0 (render-ctx-fill-rule ctx)))))
+      (for ([p (in-list fill-paths)]) (send dc draw-path p 0 0 (render-ctx-fill-rule ctx)))))
   ;; strokes resolve through the SAME resolve-fill-brush a fill would,
   ;; so a gradient/pattern stroke gets a real gradient/pattern brush
   ;; (not just its fallback color) -- previously a dedicated
@@ -6038,6 +6054,23 @@
                 "<svg width=\"20\" height=\"20\">
                    <path d=\"M0 0H20V20H0Z M5 5H15V15H5Z\"
                          fill=\"black\" fill-rule=\"evenodd\"/>
+                 </svg>"))
+    (define dc (new bitmap-dc% [bitmap bm]))
+    (define px (make-object color%))
+    (send dc get-pixel 2 2 px)
+    (check-equal? (send px red) 0)
+    (send dc get-pixel 10 10 px)
+    (check-equal? (send px red) 255))
+
+  (test-case "fill combines implicitly closed subpaths for nonzero winding"
+    ;; A fill closes open SVG subpaths, but a stroke would leave them open.
+    ;; The outer and inner contours must therefore be combined only for the
+    ;; fill operation; drawing them independently fills the counter.  This is
+    ;; the form emitted by dvisvgm for glyphs such as lowercase `a` and `b`.
+    (define bm (svg-string->bitmap
+                "<svg width=\"20\" height=\"20\">
+                   <path d=\"M0 0H20V20H0 M5 5V15H15V5\"
+                         fill=\"black\"/>
                  </svg>"))
     (define dc (new bitmap-dc% [bitmap bm]))
     (define px (make-object color%))
